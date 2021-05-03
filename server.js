@@ -45,6 +45,7 @@
 
 const lowdb = require('lowdb');
 const express = require('express');
+const bcrypt = require('bcrypt');
 const FileSync = require('lowdb/adapters/FileSync');
 
 const adapter = new FileSync('accounts.json');
@@ -58,24 +59,44 @@ function initiateDatabase() {
   database.defaults({ accounts: [] }).write();
 }
 
-
 // Body ser ut såhär: { username: 'Chris', password: 'pwd12', email: "chris@chris.com"}
-app.post('/api/accounts', (request, response) => {
- const account = request.body;
+app.post('/api/account', (request, response) => {
+  const account = request.body;
   console.log('Konto att lägga till:', account);
+
+  //Kollar om användarnamn eller e-post redan finns i databasen
+  const usernameExists = database.get('accounts').find({ username: account.username }).value();
+  const emailExists = database.get('accounts').find({ email: account.email }).value();
+
+  console.log('usernameExists:', usernameExists);
+  console.log('emailExists', emailExists);
+
+  const result = {
+    success: false,
+    usernameExists: false,
+    emailExists: false
+  }
+
+  //Om användarnamnet redan finns i databasen
+  if (usernameExists) {
+    result.usernameExists = true;
+  }
+
+  //Om e-post redan finns i databasen
+  if (emailExists) {
+    result.emailExists = true;
+  }
+
+  if (!result.usernameExists && !result.emailExists) {
+    database.get('accounts').push(account).write();
+    result.success = true;
+  }
+
+  response.json(result);
 });
 
-app.listen(8000, () => {
+app.listen(8888, () => {
   console.log('Server started');
   initiateDatabase();
 });
 
-const account = { username: 'Chris', password: 'pwd12', email: "chris@chris.com" }
-
-fetch('http://localhost:8000/api/account', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify(account) // Vad skickar vi här?
-});

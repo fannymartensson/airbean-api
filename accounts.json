@@ -1,3 +1,9 @@
 {
-  "accounts": []
+  "accounts": [
+    {
+      "username": "Nils",
+      "email": "nils@nils.com",
+      "password": "pwd123"
+    }
+  ]
 }
