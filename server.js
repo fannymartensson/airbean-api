@@ -50,7 +50,7 @@ const FileSync = require('lowdb/adapters/FileSync');
 const adapter = new FileSync('accounts.json');
 const database = lowdb(adapter);
 
-
+const app = express();
 
 app.use(express.json());
 
