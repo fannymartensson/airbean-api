@@ -43,13 +43,17 @@
  * }
  */
 
+ //Importerar de vi behöver
 const lowdb = require('lowdb');
 const express = require('express');
 const bcrypt = require('bcrypt');
 const FileSync = require('lowdb/adapters/FileSync');
+const path = require('path');
 
 const adapter = new FileSync('accounts.json');
+const adapter2 = new FileSync('menu.json');
 const database = lowdb(adapter);
+const database2 = lowdb(adapter2);
 
 const app = express();
 
@@ -57,8 +61,30 @@ app.use(express.json());
 
 function initiateDatabase() {
   database.defaults({ accounts: [] }).write();
-}
+};
+function initiateDatabase2() {
+  database2.defaults({ menu: [] }).write();
+};
 
+//GET anrop till menyn
+
+app.get('/api/coffee', (request, response) => {
+  const todos = database2.get('menu').value();
+
+
+  let result = {}
+
+  if (todos.length > 0) {
+    result.success = true;
+    result.todos = todos;
+  } else {
+    result.success = false;
+    result.message = 'Inga todos att hämta'
+  }
+
+  response.json(result);
+});
+//POST anrop till databasen accounts
 // Body ser ut såhär: { username: 'Chris', password: 'pwd12', email: "chris@chris.com"}
 app.post('/api/account', (request, response) => {
   const account = request.body;
@@ -87,6 +113,7 @@ app.post('/api/account', (request, response) => {
     result.emailExists = true;
   }
 
+  //Om användarnamnet & Emailen inte finns sedan tidigare lägg till i databasen Accounts
   if (!result.usernameExists && !result.emailExists) {
     database.get('accounts').push(account).write();
     result.success = true;
@@ -95,8 +122,10 @@ app.post('/api/account', (request, response) => {
   response.json(result);
 });
 
+//Visar så servern är startad korrekt och initierar databasen
 app.listen(8888, () => {
   console.log('Server started');
   initiateDatabase();
+  initiateDatabase2();
 });
 
