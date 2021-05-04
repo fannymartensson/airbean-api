@@ -3,7 +3,11 @@
  * 
  * URL: /api/coffee
  * Method: GET
- * Body: Returnerar en kaffemeny (se bifogad json nedanför)
+ * Body: Returnerar en kaffemeny.
+ * 
+ *  * URL: /api/account
+ * Method: POST
+ * Body: Skapar ett användarkonto
  * 
  * URL: /api/order
  * Method: POST
@@ -13,9 +17,6 @@
  * Method: GET
  * Body: Returnerar orderhistorik för en specifik användare
  * 
- * URL: /api/account
- * Method: POST
- * Body: Skapar ett användarkonto
  * 
  */
 /**
@@ -119,18 +120,18 @@ app.post("/api/order", (request, response) => {
 
   // Räkna ut totalen och lägg till order i databasen
   try {
-    const menuItems = db.get("menu");
+    const menuItems = db2.get("menu");
     const orderItems = [];
     for (const { id, quantity } of items) {
-      const dbItem = menuItems.find({ id }).value();
+      const db2Item = menuItems.find({ id }).value();
       // Ensure item exists in menu
-      if (!dbItem) {
+      if (!db2Item) {
         return response
           .status(400)
           .json("One or more item in the order was not found");
       }
-      const total = dbItem.price * quantity;
-      orderItems.push({ quantity, total, ...dbItem });
+      const total = db2Item.price * quantity;
+      orderItems.push({ quantity, total, ...db2Item });
     }
     const orderTotal = orderItems.reduce(
       (total, currentItem) => (total += currentItem.total),
