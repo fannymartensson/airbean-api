@@ -17,7 +17,6 @@
  * Method: POST
  * Body: Skapar ett användarkonto
  * 
-
  */
 /**
  * Databas
@@ -47,21 +46,27 @@
 const lowdb = require("lowdb");
 const express = require("express");
 const FileSync = require("lowdb/adapters/FileSync");
-const dbAdapter = new FileSync("menu.json");
-const db = lowdb(dbAdapter);
 const { v4: uuidv4 } = require('uuid');
+
+const adapter = new FileSync('accounts.json');
+const adapter2 = new FileSync('menu.json');
+const db = lowdb(adapter);
+const db2 = lowdb(adapter2);
+
 const app = express();
 
 app.use(express.json());
 
 function initiateDatabase() {
   db.defaults({ accounts: [], orders: [] }).write();
-}
-
+};
+function initiateDatabase2() {
+  db2.defaults({ menu: [] }).write();
+};
 // GET anrop till menyn
 app.get("/api/coffee", (_request, response) => {
   try {
-    const menu = db.get("menu").value();
+    const menu = db2.get("menu").value();
     return response.json(menu);
   } catch (_error) {
     return response.status(500).json("Internal server error");
@@ -178,8 +183,9 @@ app.get("/api/order/:username", (request, response) => {
 });
 
 // Visar så servern är startad korrekt och initierar databasen
-const PORT = 8888;
-app.listen(8888, () => {
+const PORT = 8880;
+app.listen(8880, () => {
   console.info(`Server started on port ${PORT}`);
   initiateDatabase();
+  initiateDatabase2()
 });
