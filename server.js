@@ -167,9 +167,9 @@ app.get("/api/order/:username", (request, response) => {
   }
 
   try {
-    // Check if id exists 
-    const username = db.get("accounts").find({ username }).value();
-    if (!username) {
+    // Check if user exists at id
+    const user = db.get("accounts").find({ username }).value();
+    if (!user) {
       return response.status(404).json("Not found");
     }
 
