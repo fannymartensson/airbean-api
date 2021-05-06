@@ -93,10 +93,9 @@ app.use(express.json());
 
 function initiateDatabase() {
   db.defaults({ accounts: [], orders: [] }).write();
-};
-function initiateDatabase2() {
   db2.defaults({ menu: [] }).write();
 };
+
 // GET anrop till menyn
 app.get("/api/coffee", (_request, response) => {
   try {
@@ -222,5 +221,4 @@ const PORT = 8088;
 app.listen(8088, () => {
   console.info(`Server started on port ${PORT}`);
   initiateDatabase();
-  initiateDatabase2()
 });
