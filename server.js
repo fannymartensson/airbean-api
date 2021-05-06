@@ -11,22 +11,24 @@
  * 
  * URL: /api/order
  * Method: POST
- * Body: Sparar en kaffebeställning för en användare och returnerar en ETA-tid och ordernummer (båda dessa kan slumpas) till frontend
+ * Body: Sparar en kaffebeställning för en användare och returnerar en ETA-tid och ordernummer  till frontend
  * 
- * URL: /api/order/:id
+ * URL: /api/order/:username (ändrade från :id till :username för att det blir tydligare på vilken användare man söker orderhistorik på, men principen är ju densamma)
  * Method: GET
  * Body: Returnerar orderhistorik för en specifik användare
  * 
  * 
  */
 /**
- * Databas
+ * Databas Accounts
  *
+ * Användare:
+ * 
  * Vad är den till för?
  * Spara våra användarkonton och kunna validera användarnamn och lösenord
  *
  * Vad vill vi spara?
- * Användarnman, lösenord och (ev. epost) inte krav. Varje användare behöver vara unik.
+ * Användarnman, lösenord och (ev. epost) inte krav. Varje användare behöver ha ett unikt id.
  *
  * Vad för typ av data?
  * Det är en array där varje användarkonto är ett objekt
@@ -41,6 +43,37 @@
  *     }
  *   ]
  * }
+ * 
+ * Ordrar:
+ * 
+ *  Vad är den till för?
+ * Spara orderdata för en specifik användare för att läsa av orderhistorik.
+ *
+ * Vad vill vi spara?
+ * Items användaren beställt och total kostnad, order id och ETA tid när leveransen ska vara framme.
+ *
+ * Vad för typ av data?
+ * Det är en array där varje order är ett objekt
+ *
+ * Ex:
+ *   "orders": [
+    {
+      "username": "Lina",
+      "items": [
+        {
+          "quantity": 2,
+          "total": 78,
+          "id": 1,
+          "title": "Bryggkaffe",
+          "desc": "Bryggd på månadens bönor.",
+          "price": 39
+        }
+      ],
+      "total": 78,
+      "eta": "2021-05-04T08:04:07.019Z",
+      "id": "e5d72cb0-1bad-4c75-a01c-0b12ed2ce538"
+    }
+  ]
  */
 
 // Importerar de vi behöver
@@ -75,7 +108,7 @@ app.get("/api/coffee", (_request, response) => {
 });
 
 // POST anrop till databasen accounts
-// Body ser ut såhär: { username: 'Chris', password: 'pwd12', email: "chris@chris.com"}
+// Body ser ut såhär: { username: 'Lina', password: 'pwd12', email: "lina@lina.com"}
 app.post("/api/account", (request, response) => {
   const { username, password, email } = request.body;
   console.log("Konto att lägga till:", username, password, email);
@@ -118,7 +151,7 @@ app.post("/api/order", (request, response) => {
     return response.status(401).json("Unauthorized");
   }
 
-  // Räkna ut totalen och lägg till order i databasen
+  // Räknar ut totalen och lägger till order i databasen
   try {
     const menuItems = db2.get("menu");
     const orderItems = [];
@@ -138,14 +171,14 @@ app.post("/api/order", (request, response) => {
       0
     );
 
-    // Add 15 minutes to current time for ETA
+    // Adderar 15 minuter till ETA tiden
     const eta = new Date();
-    eta.setMilliseconds(eta.getMinutes() + 15);
+    eta.setMinutes(eta.getMinutes() + 15);
 
-    // Generate unique order id
+    // Genererar unika id nummer
     const id = uuidv4();
 
-    // Save order in database
+    // Sparar ordern i databasen
     db.get("orders")
       .push({ username, items: orderItems, total: orderTotal, eta, id })
       .write();
@@ -158,7 +191,7 @@ app.post("/api/order", (request, response) => {
 });
 
 // GET anrop till orders
-// Return orders for user
+// Returnerar ordrar för användaren
 app.get("/api/order/:username", (request, response) => {
   const { username } = request.params;
 
@@ -167,13 +200,13 @@ app.get("/api/order/:username", (request, response) => {
   }
 
   try {
-    // Check if user exists at id
+    // Kollar så användaren extisterar
     const user = db.get("accounts").find({ username }).value();
     if (!user) {
       return response.status(404).json("Not found");
     }
 
-    // Get all orders of user
+    // Får ut alla ordrar från användaren
     const orders = db.get("orders").filter({ username }).value();
 
     return response.json(orders);
@@ -184,8 +217,9 @@ app.get("/api/order/:username", (request, response) => {
 });
 
 // Visar så servern är startad korrekt och initierar databasen
-const PORT = 8880;
-app.listen(8880, () => {
+const PORT = 8088;
+
+app.listen(8088, () => {
   console.info(`Server started on port ${PORT}`);
   initiateDatabase();
   initiateDatabase2()
